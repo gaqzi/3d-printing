@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+while IFS=' ' read -r repo ref target; do
+  # Skip comments and blank lines
+  [[ -z "$repo" || "$repo" == \#* ]] && continue
+
+  echo "==> $target @ ${ref:0:12}"
+
+  if [ -d "$target/.git" ]; then
+    git -C "$target" fetch origin
+  else
+    rm -rf "$target"
+    mkdir -p "$(dirname "$target")"
+    git clone -q "$repo" "$target"
+  fi
+
+  git -C "$target" checkout -q "$ref"
+done < dependencies.txt
+
+echo "Done."
