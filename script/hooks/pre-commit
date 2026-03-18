@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+# OpenSCAD compile check — called from .beads/hooks/pre-commit
+
+output=$(make check 2>&1)
+rc=$?
+if [ $rc -ne 0 ]; then
+    echo "pre-commit: OpenSCAD check failed" >&2
+    echo "$output" | grep -E "^(ERROR|TRACE|Checking )" >&2
+    exit 1
+fi

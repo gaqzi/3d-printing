@@ -3,6 +3,27 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+# Ensure bd (beads) is installed
+if ! command -v bd >/dev/null 2>&1; then
+  echo "error: bd (beads) is required but not installed." >&2
+  echo "  brew install beads" >&2
+  exit 1
+fi
+
+# Ensure beads hooks are wired up
+bd hooks install --beads >/dev/null 2>&1 || true
+
+# Wire script/hooks/pre-commit into beads hook
+hook=".beads/hooks/pre-commit"
+marker="script/hooks/pre-commit"
+if ! grep -q "$marker" "$hook" 2>/dev/null; then
+  cat >> "$hook" <<'HOOK'
+
+# --- Project hooks ---
+"$(git rev-parse --show-toplevel)/script/hooks/pre-commit"
+HOOK
+fi
+
 while IFS=' ' read -r repo ref target; do
   # Skip comments and blank lines
   [[ -z "$repo" || "$repo" == \#* ]] && continue
