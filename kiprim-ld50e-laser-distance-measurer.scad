@@ -5,48 +5,67 @@ include <vendor/gridfinity_extended_openscad/modules/gridfinity_constants.scad>
 use <vendor/gridfinity_extended_openscad/modules/module_gridfinity_cup.scad>
 use <vendor/gridfinity_extended_openscad/modules/module_gridfinity.scad>
 
-// Select which part to render: "bin", "lip", "floor", or "all" (preview)
+// Select which part to render: "cup", "lip", "floor", or "all" (preview)
 PART = "all";
 
-// Bin dimensions in gridfinity units
-width = [2, 0];   // 2 units = 84mm
-depth = [3, 0];   // 4 units = 168mm
-height = [4, 0];  // 4 units = 28mm
+// Cup dimensions in gridfinity units
+cup_units_x = [2, 0];
+cup_units_y = [3, 0];
+cup_units_z = [4, 0];
 
-// Internal cavity approximate dimensions (after walls + clearance)
-// X: 2*42 - 2*0.5(clearance) - 2*0.95(wall) ≈ 81.1mm
-// Y: 4*42 - 2*0.5(clearance) - 2*0.95(wall) ≈ 165.1mm
+// Gridfinity cup geometry
+gf_clearance      = 0.5;
+gf_wall_thickness = 0.95;
+cup_inner_x = 2 * gf_pitch - 2 * gf_clearance - 2 * gf_wall_thickness;
+cup_inner_y = 3 * gf_pitch - 2 * gf_clearance - 2 * gf_wall_thickness;
 
-// Tool cutout shape (measurements of Kiprim LD50E + manual)
-// Bottom layer: manual recess (73 x 104 x 18.5mm)
-// Upper layer: tool recess (55 x 115 x 15mm), offset inward
-module tool_shape() {
-    // Manual recess (open slot, full height so manual slides in from top)
-    cube([73, 104, 18.5]);
-    // Tool recess (narrower, extends beyond manual in Y)
-    translate([9, -5.5, 3.5])
-        cube([55, 115, 15]);
-}
+// --- Physical measurements of Kiprim LD50E + manual ---
 
-// Center the cutout in the bin cavity
-cavity_x = 2 * 42 - 2 * 0.5 - 2 * 0.95;  // ~81.1mm
-cavity_y = 3 * 42 - 2 * 0.5 - 2 * 0.95;   // ~165.1mm
+manual_width     = 72;
+manual_depth     = 103;
+manual_thickness = 3;
 
-tool_x_extent = 73;
-tool_y_min = -5.5;
-tool_y_extent = 109.5 - (-5.5);  // = 115
+tool_width  = 50.5;
+tool_depth  = 109.5;
+tool_height = 25;  // recess is shallower to save plastic
 
-x_offset = (cavity_x - tool_x_extent) / 2 + 0.95 + 0.5;
-y_offset = (cavity_y - tool_y_extent) / 2 + 0.95 + 0.5 - tool_y_min;
+tool_recess_height = 15;
+
+// --- Derived dimensions (with margin) ---
+
+manual_recess_width  = manual_width + 1;
+manual_recess_depth  = manual_depth + 1;
+manual_recess_height = manual_thickness + 0.5 + tool_recess_height;
+
+tool_recess_width = tool_width + 1;
+tool_recess_depth = tool_depth + 2;
+tool_step_z       = manual_thickness + 0.5;  // tool shelf sits on top of manual layer
+
+tool_x_inset        = (manual_recess_width - tool_recess_width) / 2;
+tool_overhang_south = (tool_recess_depth - manual_recess_depth) / 2;
+tool_overhang_north = tool_recess_depth - manual_recess_depth - tool_overhang_south;
+
+x_offset = (cup_inner_x - manual_recess_width) / 2 + gf_wall_thickness + gf_clearance;
+y_offset = (cup_inner_y - tool_recess_depth) / 2 + gf_wall_thickness + gf_clearance + tool_overhang_south;
 z_offset = 10;
 
 floor_thickness = 0.6;
+
+// --- Tool cutout shape ---
+
+module tool_shape() {
+    // Manual recess — open slot, extrudes to top so manual slides in
+    cube([manual_recess_width, manual_recess_depth, manual_recess_height]);
+    // Tool recess — narrower, extends beyond manual in Y
+    translate([tool_x_inset, -tool_overhang_south, tool_step_z])
+        cube([tool_recess_width, tool_recess_depth, tool_recess_height]);
+}
 
 // --- Modules for each part ---
 
 module cup_with_lip() {
     gridfinity_cup(
-        width = width, depth = depth, height = height,
+        width = cup_units_x, depth = cup_units_y, height = cup_units_z,
         filled_in = "enabled",
         lip_settings = LipSettings(lipNotch = true)
     );
@@ -54,16 +73,15 @@ module cup_with_lip() {
 
 module cup_no_lip() {
     gridfinity_cup(
-        width = width, depth = depth, height = height,
+        width = cup_units_x, depth = cup_units_y, height = cup_units_z,
         filled_in = "enabled",
         lip_settings = LipSettings(lipStyle = "none", lipNotch = true)
     );
 }
 
-module bin_part() {
+module cup_part() {
     difference() {
         cup_no_lip();
-        // Tool cavity
         translate([x_offset, y_offset, z_offset])
             tool_shape();
         // Remove floor slab volumes so color pieces fit flush
@@ -80,28 +98,27 @@ module lip_part() {
 
 module floor_part() {
     translate([x_offset, y_offset, z_offset]) {
-        // Manual recess floor (bottom of open slot)
-        cube([73, 104, floor_thickness]);
-        // South shelf (tool head rests here, y = -5.5 to 0)
-        translate([9, -5.5, 3.5])
-            cube([55, 5.5, floor_thickness]);
-        // North shelf (tool bottom rests here, y = 104 to 109.5)
-        translate([9, 104, 3.5])
-            cube([55, 5.5, floor_thickness]);
+        cube([manual_recess_width, manual_recess_depth, floor_thickness]);
+        // South shelf — tool head rests here
+        translate([tool_x_inset, -tool_overhang_south, tool_step_z])
+            cube([tool_recess_width, tool_overhang_south, floor_thickness]);
+        // North shelf — tool bottom rests here
+        translate([tool_x_inset, manual_recess_depth, tool_step_z])
+            cube([tool_recess_width, tool_overhang_north, floor_thickness]);
     }
 }
 
 // --- Render ---
 
 set_environment(
-    width = width,
-    depth = depth,
-    height = height,
+    width = cup_units_x,
+    depth = cup_units_y,
+    height = cup_units_z,
     render_position = "zero",
     setColour = "disabled"
 )
-if (PART == "bin") {
-    bin_part();
+if (PART == "cup") {
+    cup_part();
 } else if (PART == "lip") {
     lip_part();
 } else if (PART == "floor") {
@@ -109,7 +126,7 @@ if (PART == "bin") {
 } else {
     // "all" — preview with colors
     // render() forces CGAL evaluation so lip difference displays correctly in F5
-    color("grey") bin_part();
+    color("grey") cup_part();
     color("white") render() lip_part();
     color("red") floor_part();
 }
