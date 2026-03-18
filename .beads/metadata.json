@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "server",
+  "dolt_database": "bd_3d",
+  "project_id": "49cb7c09-7568-4bb2-9592-1a37e278898c"
+}
