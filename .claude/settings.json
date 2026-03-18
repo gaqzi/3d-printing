@@ -1,6 +1,7 @@
 {
   "permissions": {
     "allow": [
+      "Bash(bd:*)",
       "Bash(script/build:*)",
       "Bash(/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD:*)"
     ],
@@ -13,8 +14,34 @@
     "autoAllowBashIfSandboxed": true,
     "allowUnsandboxedCommands": true,
     "excludedCommands": [
+      "bd",
       "script/build",
       "/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD"
     ]
+  },
+  "hooks": {
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "command": "bd prime",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "command": "bd prime",
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ]
   }
+
 }
