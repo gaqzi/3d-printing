@@ -3,4 +3,76 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-exec make "$@"
+OPENSCAD="/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD"
+OUTDIR="out"
+
+build_scad() {
+  local src="$1"
+  local stem="${src%.scad}"
+  echo "Building ${stem}.stl..."
+  "$OPENSCAD" -o "${OUTDIR}/${stem}.stl" "$src"
+}
+
+build_parts() {
+  local parts_file="$1"
+  local stem="${parts_file%.parts}"
+  local src="${stem}.scad"
+  local parts
+  if [ -n "${PART:-}" ]; then
+    parts="$PART"
+  else
+    parts=$(cat "$parts_file")
+  fi
+  for part in $parts; do
+    echo "Building ${stem}-${part}.stl..."
+    "$OPENSCAD" -o "${OUTDIR}/${stem}-${part}.stl" -D "PART=\"${part}\"" "$src"
+  done
+}
+
+check_all() {
+  local fail=0
+  for f in *.scad; do
+    [ -f "$f" ] || continue
+    echo "Checking $f..."
+    if ! "$OPENSCAD" -o /dev/null --export-format binstl "$f" 2>&1; then
+      fail=1
+    fi
+  done
+  return $fail
+}
+
+case "${1:-}" in
+  check)
+    check_all
+    ;;
+  clean)
+    rm -rf "$OUTDIR"
+    ;;
+  -h|--help)
+    echo "Usage: script/build [check|clean|<file>...]"
+    echo ""
+    echo "  script/build                Build all .scad files"
+    echo "  script/build foo.scad       Build out/foo.stl"
+    echo "  script/build foo.parts      Build out/foo-<part>.stl per part"
+    echo "  PART=lip script/build foo.parts  Build one part only"
+    echo "  script/build check          Verify all .scad files compile"
+    echo "  script/build clean          Remove out/"
+    ;;
+  "")
+    mkdir -p "$OUTDIR"
+    for f in *.scad; do
+      [ -f "$f" ] || continue
+      build_scad "$f"
+    done
+    ;;
+  *)
+    mkdir -p "$OUTDIR"
+    for f in "$@"; do
+      case "$f" in
+        *.parts) build_parts "$f" ;;
+        *.scad)  build_scad "$f" ;;
+        *) echo "Unknown file type: $f" >&2; exit 1 ;;
+      esac
+    done
+    ;;
+esac
