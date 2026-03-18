@@ -1,7 +1,21 @@
 #!/usr/bin/env sh
-# OpenSCAD compile check — called from .beads/hooks/pre-commit
+# Pre-commit checks — called from .beads/hooks/pre-commit
 
 root="$(git rev-parse --show-toplevel)"
+
+# Check that all staged .scad files have a license header
+fail=0
+for f in $(git diff --cached --name-only --diff-filter=ACM -- '*.scad'); do
+    if ! head -1 "$f" | grep -q "^// SPDX-License-Identifier:"; then
+        echo "pre-commit: missing SPDX-License-Identifier in $f" >&2
+        fail=1
+    fi
+done
+if [ $fail -ne 0 ]; then
+    exit 1
+fi
+
+# OpenSCAD compile check
 output=$("$root/script/build" check 2>&1)
 rc=$?
 if [ $rc -ne 0 ]; then

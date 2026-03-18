@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: CC-BY-SA-4.0
+// Copyright (c) 2026 Björn Andersson <ba@bjorn.now>
+
 include <vendor/gridfinity_extended_openscad/modules/gridfinity_constants.scad>
 use <vendor/gridfinity_extended_openscad/modules/module_gridfinity_cup.scad>
 use <vendor/gridfinity_extended_openscad/modules/module_gridfinity.scad>
