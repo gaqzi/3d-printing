@@ -3,5 +3,8 @@
 .dolt/
 *.db
 
+# Build output
+out/
+
 # Vendored dependencies (managed by script/bootstrap)
 vendor/
