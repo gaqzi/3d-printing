@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(script/build:*)",
+      "Bash(/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD:*)"
+    ],
+    "deny": [
+      "Bash(git commit:*)"
+    ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
+    "allowUnsandboxedCommands": true,
+    "excludedCommands": [
+      "script/build",
+      "/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD"
+    ]
+  }
+}
