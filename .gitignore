@@ -8,3 +8,6 @@ out/
 
 # Vendored dependencies (managed by script/bootstrap)
 vendor/
+
+# Beads / Dolt files (added by bd init)
+.beads-credential-key
