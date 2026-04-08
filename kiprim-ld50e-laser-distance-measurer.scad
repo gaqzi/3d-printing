@@ -25,7 +25,7 @@ manual_width     = 72;
 manual_depth     = 103;
 manual_thickness = 3;
 
-tool_width  = 50.5;
+tool_width  = 50.5 - 4.5; // the ends taper from 50.5 down to 42mm on the bottom and 44mm at the top, reduce for fit and the width for the manual give plenty of room
 tool_depth  = 109.5;
 tool_height = 25;  // recess is shallower to save plastic
 
