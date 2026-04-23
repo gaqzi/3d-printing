@@ -1,5 +1,6 @@
 # Agent Instructions
 
+
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:b9766037 -->
 ## Beads Issue Tracker
 
