@@ -1,0 +1,4 @@
+#!/bin/sh
+# Git textconv filter for 3MF files (ZIP archives with XML inside).
+# Extracts model geometry and slicer config so git diff shows readable text.
+unzip -p "$1" "3D/Objects/*.model" "Metadata/*.config" 2>/dev/null
