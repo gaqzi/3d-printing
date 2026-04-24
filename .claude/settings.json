@@ -4,9 +4,6 @@
       "Bash(bd:*)",
       "Bash(script/build:*)",
       "Bash(/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD:*)"
-    ],
-    "deny": [
-      "Bash(git commit:*)"
     ]
   },
   "sandbox": {
