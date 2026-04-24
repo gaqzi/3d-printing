@@ -57,3 +57,5 @@ sync:
     git-remote: git+ssh://git@github.com/gaqzi/3d-printing.git
 
 dolt.shared-server: true
+
+export.auto: false
